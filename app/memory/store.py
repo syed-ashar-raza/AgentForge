@@ -5,8 +5,9 @@ from pathlib import Path
 
 class MemoryStore:
     def __init__(self, database_path: str | Path, limit: int = 20) -> None:
-        self.database_path = str(database_path)
+        self.database_path = Path(database_path)
         self.limit = limit
+        self.database_path.parent.mkdir(parents=True, exist_ok=True)
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
