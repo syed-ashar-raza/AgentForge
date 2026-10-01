@@ -1,421 +1,594 @@
 # AgentForge
 
-Production-oriented AI agent framework built with Python, FastAPI, Ollama, and SQLite.
+> Production-oriented AI agent framework built with Python, FastAPI, Ollama, and SQLite.
 
-AgentForge demonstrates a practical agent architecture where an LLM plans actions, selects registered tools, executes them, and maintains persistent conversation memory.
+AgentForge is a local AI agent system that demonstrates how an LLM can plan actions, select registered tools, execute them through a controlled runtime, and maintain persistent conversation memory.
 
-## Architecture
+The project focuses on the core engineering components required to build practical agentic AI systems: planning, tool calling, deterministic execution, memory, runtime safety, API integration, testing, and local LLM inference.
+
+---
+
+## 🚀 Overview
+
+AgentForge implements an end-to-end agent execution architecture:
 
 ```text
-Client
-  |
-  v
+                         ┌─────────────────────┐
+                         │       Client        │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │     FastAPI API     │
+                         └──────────┬──────────┘
+                                    │
+                                    ▼
+                         ┌─────────────────────┐
+                         │       Agent         │
+                         └──────────┬──────────┘
+                                    │
+                    ┌───────────────┼───────────────┐
+                    │               │               │
+                    ▼               ▼               ▼
+              ┌──────────┐   ┌──────────────┐ ┌──────────┐
+              │ Planner  │   │ Tool Registry│ │  Memory  │
+              │          │   │              │ │  SQLite  │
+              └────┬─────┘   └──────┬───────┘ └──────────┘
+                   │                │
+                   ▼                ▼
+              ┌──────────┐    ┌──────────────┐
+              │  Ollama  │    │   Executor   │
+              │ Qwen3:4b │    │              │
+              └──────────┘    └──────┬───────┘
+                                      │
+                              ┌───────┴────────┐
+                              ▼                ▼
+                        Calculator      Current Datetime
+
+The architecture separates:
+
+Planning — deciding whether a tool is required
+Tool discovery — selecting registered capabilities
+Execution — running tools through a controlled executor
+Memory — persisting conversation state
+LLM integration — communicating with the local model
+API — exposing the agent through FastAPI
+Runtime controls — bounding agent execution
+✨ Key Features
+LLM-driven agent planning
+Tool selection and execution
+Extensible tool registry
+Calculator tool
+Current datetime tool
+Persistent SQLite conversation memory
+FastAPI REST API
+Local Ollama LLM integration
+Qwen3:4b development model
+Bounded agent execution
+Maximum-step controls
+Maximum-tool-execution controls
+Bounded memory usage
+Configuration-driven behavior
+Automated pytest test suite
+Ruff static analysis
+Python compilation validation
+Live Ollama connectivity verification
+End-to-end agent execution verification
+🧠 Agent Execution Pipeline
+
+AgentForge follows a controlled execution loop:
+
+User Request
+     │
+     ▼
 FastAPI API
-  |
-  v
+     │
+     ▼
 Agent
-  +--> Planner --> Ollama / Qwen3
-  |
-  +--> Tool Registry
-  |      +--> Calculator
-  |      +--> Current Datetime
-  |
-  +--> Executor
-  |
-  +--> SQLite Memory
-```
+     │
+     ▼
+Planner
+     │
+     ├───────────────┐
+     │               │
+     ▼               ▼
+No Tool Required   Tool Required
+     │               │
+     │               ▼
+     │        Tool Registry
+     │               │
+     │               ▼
+     │           Executor
+     │               │
+     │               ▼
+     │        Tool Execution
+     │               │
+     └───────┬───────┘
+             │
+             ▼
+       Final Response
+             │
+             ▼
+      SQLite Memory
 
-## Features
+The separation between planning and execution provides a clear boundary:
 
-- LLM-driven agent planning
-- Tool selection and execution
-- Extensible tool registry
-- Calculator tool
-- Current datetime tool
-- Persistent SQLite conversation memory
-- FastAPI API
-- Local Ollama LLM integration
-- Qwen3:4b support
-- Bounded agent execution
-- Runtime safety limits
-- Configuration management
-- Automated testing
-- Ruff linting
-- Python compilation verification
+Decision → Execution
 
-## Tech Stack
+The LLM determines the required action, while the executor is responsible for performing the selected registered tool.
 
-| Technology | Purpose |
-|---|---|
-| Python | Core application |
-| FastAPI | API layer |
-| Pydantic | Data validation and configuration |
-| Ollama | Local LLM inference |
-| Qwen3:4b | Verified development model |
-| SQLite | Persistent memory |
-| pytest | Automated testing |
-| Ruff | Linting and code quality |
-
-## Project Structure
-
-```text
+🛠️ Tech Stack
+Technology	Purpose
+Python	Core application
+FastAPI	HTTP API layer
+Pydantic	Data validation and configuration
+Ollama	Local LLM inference
+Qwen3:4b	Verified development model
+SQLite	Persistent conversation memory
+pytest	Automated testing
+Ruff	Static analysis and code quality
+Git	Version control
+📁 Project Structure
 AgentForge/
+│
 ├── app/
 │   ├── agent/
 │   │   ├── agent.py
 │   │   └── planner.py
+│   │
 │   ├── api/
+│   │
 │   ├── core/
+│   │
 │   ├── llm/
+│   │
 │   ├── memory/
+│   │
 │   └── tools/
 │       ├── calculator.py
 │       ├── datetime.py
 │       └── registry.py
+│
 ├── tests/
+│
 ├── live_test.py
 ├── .env.example
 ├── .gitignore
 ├── pyproject.toml
 └── README.md
-```
+🔄 How It Works
 
-## How It Works
+AgentForge processes a request through the following sequence:
 
-AgentForge follows a simple agent execution loop:
-
-```text
 1. User sends a request
-        |
-        v
-2. Agent receives the request
-        |
-        v
-3. Planner asks the LLM what action is required
-        |
-        v
-4. Planner selects a registered tool when necessary
-        |
-        v
-5. Executor runs the selected tool
-        |
-        v
-6. Result is returned to the agent
-        |
-        v
-7. Agent produces the final response
-        |
-        v
-8. Conversation is persisted in SQLite memory
-```
+        │
+        ▼
+2. FastAPI receives the request
+        │
+        ▼
+3. Agent receives the request
+        │
+        ▼
+4. Planner determines the required action
+        │
+        ▼
+5. Registered tool is selected when required
+        │
+        ▼
+6. Executor runs the selected tool
+        │
+        ▼
+7. Tool result is returned
+        │
+        ▼
+8. Agent generates the final response
+        │
+        ▼
+9. Conversation state is persisted
 
-## Setup
+This design keeps the core agent lifecycle independent from individual tool implementations.
 
-### 1. Clone the Repository
+🧩 Core Components
+Agent
 
-```bash
-git clone https://github.com/syed-ashar-raza/AgentForge.git
-cd AgentForge
-```
-
-### 2. Create a Virtual Environment
-
-```bash
-python -m venv .venv
-```
-
-### 3. Activate the Environment
-
-**Windows PowerShell:**
-
-```powershell
-.venv\Scripts\Activate.ps1
-```
-
-**Linux/macOS:**
-
-```bash
-source .venv/bin/activate
-```
-
-### 4. Install Dependencies
-
-```bash
-pip install -e .
-```
-
-### 5. Configure Environment Variables
-
-**Windows PowerShell:**
-
-```powershell
-Copy-Item .env.example .env
-```
-
-Review `.env` and adjust configuration if required.
-
-## Ollama
-
-AgentForge uses Ollama for local LLM inference.
-
-The verified development model is:
-
-```text
-qwen3:4b
-```
-
-Make sure Ollama is installed and running, then make the model available locally.
-
-The application communicates with the local Ollama service rather than requiring a hosted LLM API.
-
-## Run the API
-
-Start the FastAPI development server:
-
-```bash
-uvicorn app.main:app --reload
-```
-
-The API will be available at:
-
-```text
-http://127.0.0.1:8000
-```
-
-FastAPI's interactive API documentation is available at:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-## Testing
-
-Run the automated test suite:
-
-```bash
-pytest -q
-```
-
-Run Ruff:
-
-```bash
-ruff check .
-```
-
-Run Python compilation checks:
-
-```bash
-python -m compileall -q app tests
-```
-
-## Verification
-
-The current implementation has been verified through:
-
-- 11 automated tests passing
-- Ruff validation passing
-- Python compilation passing
-- Live Ollama connectivity
-- Qwen3:4b availability
-- End-to-end Agent execution
-- Successful tool selection
-- Successful calculator execution
-- Persistent SQLite memory functionality
-
-### Example Agent Execution
-
-**Input:**
-
-```text
-What is 25 multiplied by 4?
-```
-
-**Agent execution:**
-
-```text
-Planner
-   |
-   v
-calculator("25 * 4")
-   |
-   v
-100
-```
-
-**Final response:**
-
-```text
-25 multiplied by 4 equals 100.
-```
-
-## Core Components
-
-### Agent
-
-Coordinates the complete agent execution lifecycle.
+The Agent coordinates the complete execution lifecycle.
 
 Responsibilities include:
 
-- Receiving user requests
-- Managing execution steps
-- Coordinating planning
-- Executing selected tools
-- Producing final responses
-- Persisting conversation context
+Receiving user requests
+Managing execution steps
+Coordinating planning
+Selecting registered tools
+Executing selected tools
+Producing final responses
+Persisting conversation context
+Planner
 
-### Planner
+The Planner uses the configured LLM to determine the next action.
 
-Uses the configured LLM to determine the next action.
+It can identify when a tool is required and provide the arguments needed for execution.
 
-The planner can identify when a tool is required and provide the arguments needed for execution.
+The planner is responsible for decision-making, while tool execution remains outside the LLM itself.
 
-### Tool Registry
+Tool Registry
 
-Provides a centralized mechanism for registering and discovering tools.
+The Tool Registry provides a centralized mechanism for registering and discovering tools.
 
 Current tools include:
 
-- Calculator
-- Current datetime
+Calculator
+Current datetime
 
-The registry is designed so additional tools can be added without rewriting the core agent loop.
+The registry allows additional tools to be introduced without rewriting the core agent execution loop.
 
-### Executor
+Executor
 
-Responsible for executing selected tools and returning their results to the agent.
+The Executor is responsible for running selected tools and returning their results to the agent.
 
-Keeping execution separate from planning allows the system to maintain a clear boundary between:
+This creates a deliberate separation:
 
-```text
-Decision → Execution
-```
-
-### Memory
+LLM Decision
+     │
+     ▼
+Tool Selection
+     │
+     ▼
+Controlled Execution
+     │
+     ▼
+Tool Result
+Memory
 
 AgentForge uses SQLite for persistent conversation memory.
 
 Memory provides:
 
-- Conversation persistence
-- Context retrieval
-- Bounded memory usage
-- Simple local storage
-- No external database dependency
-
-### LLM Client
+Conversation persistence
+Context retrieval
+Bounded memory usage
+Simple local storage
+No external database dependency
+LLM Client
 
 The LLM layer communicates with Ollama and keeps model communication separate from the rest of the application.
 
-This makes the architecture easier to extend to additional model providers in the future.
+The current verified development model is:
 
-## Runtime Safety
+qwen3:4b
+
+The separation makes the LLM integration easier to evolve toward additional model providers.
+
+🛡️ Runtime Safety
 
 AgentForge includes bounded execution controls to prevent uncontrolled agent loops.
 
-Current runtime limits include:
+Current runtime controls include:
 
-- Maximum agent steps
-- Maximum tool executions
-- Maximum stored memory items
+Maximum agent steps
+Maximum tool executions
+Maximum stored memory items
 
-These limits provide basic protection against runaway execution while keeping the MVP architecture lightweight.
+These controls provide basic protection against runaway execution while keeping the MVP architecture lightweight.
 
-## Design Principles
+The runtime is intentionally bounded rather than allowing an unrestricted autonomous loop.
 
-AgentForge is intentionally structured around clear separation of responsibilities:
+🔧 Current Tools
+Calculator
 
-```text
-API
- |
- v
-Agent
- |
- +--> Planner
- |
- +--> Tool Registry
- |       |
- |       +--> Tools
- |
- +--> Executor
- |
- +--> Memory
- |
- +--> LLM Client
-```
+The calculator tool provides deterministic arithmetic execution.
 
-Key design principles:
+Example:
 
-- Separation of concerns
-- Explicit tool registration
-- Bounded execution
-- Persistent state
-- Local-first inference
-- Testable components
-- Configuration-driven behavior
-- Small, maintainable modules
+User:
+What is 25 multiplied by 4?
 
-## API Layer
+Planner
+   │
+   ▼
+calculator("25 * 4")
+   │
+   ▼
+100
 
-FastAPI provides the HTTP interface for interacting with the agent.
+Result:
 
-The API layer is intentionally separated from the underlying agent implementation so that the agent can be tested and evolved independently of HTTP concerns.
+25 multiplied by 4 equals 100.
+Current Datetime
 
-## Why AgentForge?
+The datetime tool provides access to the current datetime through a registered tool interface.
 
-AgentForge focuses on the foundational engineering problems involved in building practical AI agents:
+Keeping these capabilities behind the tool registry allows the agent to discover and execute tools through the same execution mechanism.
 
-- LLM-based planning
-- Tool calling
-- Deterministic tool execution
-- Persistent memory
-- Runtime controls
-- API integration
-- Local model inference
-- Modular architecture
-- Automated verification
+🌐 API Layer
 
-The project is intentionally compact while demonstrating the core building blocks required for larger agentic systems.
+FastAPI provides the HTTP interface for interacting with AgentForge.
 
-## Current Scope
+The API layer is separated from the underlying agent implementation so the agent can be tested and evolved independently of HTTP concerns.
+
+Start the development server with:
+
+uvicorn app.main:app --reload
+
+The API is available locally at:
+
+http://127.0.0.1:8000
+
+Interactive API documentation:
+
+http://127.0.0.1:8000/docs
+🧪 Testing
+
+Run the automated test suite:
+
+pytest -q
+
+Current verified result:
+
+11 tests passed
+
+The test suite provides automated verification of the implemented AgentForge components.
+
+🔍 Code Quality
+
+AgentForge uses Ruff for static analysis.
+
+Run:
+
+ruff check .
+
+Python compilation can be verified with:
+
+python -m compileall -q app tests
+
+Current verification includes:
+
+Pytest:       PASSED
+Ruff:         PASSED
+Compilation:  PASSED
+🔬 Verification
+
+The current implementation has been verified through multiple layers.
+
+Automated Verification
+11 automated tests passing
+Ruff validation passing
+Python compilation passing
+Runtime Verification
+Live Ollama connectivity
+Qwen3:4b availability
+End-to-end agent execution
+Successful tool selection
+Successful calculator execution
+Persistent SQLite memory functionality
+
+These checks verify the implemented local MVP rather than claiming production-scale deployment performance.
+
+🧠 Agent Architecture
+
+AgentForge intentionally separates the major responsibilities:
+
+                     ┌───────────────┐
+                     │   FastAPI     │
+                     └───────┬───────┘
+                             │
+                             ▼
+                     ┌───────────────┐
+                     │     Agent     │
+                     └───────┬───────┘
+                             │
+          ┌──────────────────┼──────────────────┐
+          │                  │                  │
+          ▼                  ▼                  ▼
+     ┌──────────┐      ┌─────────────┐    ┌──────────┐
+     │ Planner  │      │ Tool Registry│    │  Memory  │
+     └────┬─────┘      └──────┬──────┘    └──────────┘
+          │                   │
+          ▼                   ▼
+     ┌──────────┐       ┌─────────────┐
+     │  Ollama  │       │   Executor  │
+     └──────────┘       └──────┬──────┘
+                                │
+                                ▼
+                          Registered Tools
+
+This architecture follows several practical software engineering principles:
+
+Separation of concerns
+Explicit tool registration
+Controlled execution
+Persistent state
+Local-first inference
+Testable components
+Configuration-driven behavior
+Small, maintainable modules
+🏗️ Design Decisions
+Local-First Inference
+
+AgentForge uses Ollama for local inference rather than requiring a hosted LLM API.
+
+This provides:
+
+Local development
+Reproducible experimentation
+No dependency on paid hosted inference for the MVP
+Direct control over the model runtime
+Explicit Tool Execution
+
+Tools are registered separately from the planner.
+
+This prevents the planning layer from being responsible for arbitrary execution logic and creates a clearer interface between:
+
+Planning
+   ↓
+Tool Selection
+   ↓
+Execution
+Persistent Local Memory
+
+SQLite provides simple persistent storage without introducing an external database dependency.
+
+This is appropriate for the current local MVP while keeping the memory interface isolated enough to evolve later.
+
+Bounded Runtime
+
+Agent execution is explicitly bounded through runtime limits.
+
+This is important for agentic systems because an unrestricted planning loop can otherwise consume excessive execution time or repeatedly invoke tools.
+
+📦 Setup
+1. Clone the Repository
+git clone https://github.com/syed-ashar-raza/AgentForge.git
+cd AgentForge
+2. Create a Virtual Environment
+python -m venv .venv
+3. Activate the Environment
+
+Windows PowerShell:
+
+.venv\Scripts\Activate.ps1
+
+Linux/macOS:
+
+source .venv/bin/activate
+4. Install Dependencies
+pip install -e .
+5. Configure Environment Variables
+
+Windows PowerShell:
+
+Copy-Item .env.example .env
+
+Review .env and adjust configuration if required.
+
+🤖 Ollama
+
+AgentForge uses Ollama for local LLM inference.
+
+Verified development model:
+
+qwen3:4b
+
+Make sure Ollama is installed and running, then make the model available locally.
+
+The application communicates with the local Ollama service rather than requiring a hosted LLM API.
+
+▶️ Run the Application
+
+Start the FastAPI development server:
+
+uvicorn app.main:app --reload
+
+Open the interactive API documentation:
+
+http://127.0.0.1:8000/docs
+📊 Current Scope
 
 The current MVP focuses on the foundational agent execution loop and supporting infrastructure.
 
-Current capabilities include:
+Implemented capabilities include:
 
-- Agent planning
-- Local LLM inference
-- Tool discovery
-- Tool execution
-- Persistent memory
-- FastAPI integration
-- Configuration
-- Runtime limits
-- Automated testing
+LLM-based planning
+Local LLM inference
+Tool discovery
+Tool selection
+Tool execution
+Persistent conversation memory
+FastAPI integration
+Configuration
+Runtime limits
+Automated testing
+Static analysis
+Python compilation verification
 
-## Future Extensions
+The implementation is intentionally compact and focused on the core mechanics of an AI agent.
+
+🔄 Future Extensions
 
 Potential future extensions include:
 
-- Additional production-grade tools
-- Structured tool schemas
-- More advanced planning strategies
-- Multi-step workflows
-- Agent observability
-- Authentication and authorization
-- Richer memory strategies
-- Evaluation and tracing
-- Deployment infrastructure
-- Additional LLM providers
-- Production monitoring
+Additional production-grade tools
+Structured tool schemas
+More advanced planning strategies
+More complex multi-step workflows
+Agent observability
+Authentication and authorization
+Richer memory strategies
+Evaluation and tracing
+Deployment infrastructure
+Additional LLM providers
+Production monitoring
 
-These are intentionally outside the current MVP scope.
+These are planned extensions rather than claims about the current implementation.
 
-## Project Status
+📈 Project Status
 
-**Status: MVP complete**
+Status: MVP complete
 
 The current implementation has passed automated and live verification for its implemented functionality.
 
-## License
+Current evidence includes:
+
+11 automated tests passing
+Ruff validation passing
+Python compilation passing
+Live Ollama connectivity
+Qwen3:4b availability
+End-to-end agent execution
+Tool selection and execution
+Persistent SQLite memory
+
+AgentForge is currently positioned as a local AI agent engineering project demonstrating the core architecture behind tool-using LLM applications.
+
+🎯 What This Project Demonstrates
+
+AgentForge demonstrates practical AI engineering across multiple layers:
+
+Python
+   ↓
+Software Architecture
+   ↓
+FastAPI
+   ↓
+LLM Integration
+   ↓
+Agent Planning
+   ↓
+Tool Calling
+   ↓
+Controlled Execution
+   ↓
+Persistent Memory
+   ↓
+Runtime Safety
+   ↓
+Testing
+   ↓
+Code Quality
+
+The project goes beyond a simple LLM API wrapper by implementing the control loop required for a functional tool-using AI agent.
+
+It demonstrates how planning, deterministic execution, memory, runtime controls, and API integration can be combined into a maintainable local agent architecture.
+
+👨‍💻 Author
+
+Syed Ashar Raza
+
+AI Engineer | Machine Learning | Generative AI | LLMs | RAG | AI Agents
+
+Building practical AI systems focused on:
+
+AI Engineering
+Agentic AI
+LLM Applications
+Generative AI
+Machine Learning
+Python
+Backend Development
+Production AI Systems
+📄 License
 
 No open-source license has been applied yet.
+
+⭐ Project
+
+If you find AgentForge useful or interesting, consider giving the repository a ⭐ on GitHub.
