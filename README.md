@@ -2,7 +2,7 @@
 
 > Production-oriented AI agent framework built with Python, FastAPI, Ollama, and SQLite.
 
-AgentForge is a local AI agent system that demonstrates how an LLM can plan actions, select registered tools, execute them through a controlled runtime, and maintain persistent conversation memory.
+AgentForge is a local AI agent system that demonstrates how an LLM can decide actions, select registered tools, execute them through a bounded iterative runtime, and maintain persistent conversation memory.
 
 The project focuses on the core engineering components required to build practical agentic AI systems: planning, tool calling, deterministic execution, memory, runtime safety, API integration, testing, and local LLM inference.
 
@@ -55,7 +55,7 @@ LLM integration — communicating with the local model
 API — exposing the agent through FastAPI
 Runtime controls — bounding agent execution
 ✨ Key Features
-LLM-driven agent planning
+LLM-driven agent decision-making
 Tool selection and execution
 Extensible tool registry
 Calculator tool
@@ -76,7 +76,7 @@ Live Ollama connectivity verification
 End-to-end agent execution verification
 🧠 Agent Execution Pipeline
 
-AgentForge follows a controlled execution loop:
+AgentForge follows a controlled iterative execution loop:
 
 User Request
      │
@@ -169,7 +169,7 @@ AgentForge processes a request through the following sequence:
 3. Agent receives the request
         │
         ▼
-4. Planner determines the required action
+4. LLM decision engine determines the next required action
         │
         ▼
 5. Registered tool is selected when required
@@ -181,10 +181,10 @@ AgentForge processes a request through the following sequence:
 7. Tool result is returned
         │
         ▼
-8. Agent generates the final response
+8. Tool results are fed into the next decision when further action is required
         │
         ▼
-9. Conversation state is persisted
+9. Agent generates the final response and persists conversation state
 
 This design keeps the core agent lifecycle independent from individual tool implementations.
 
@@ -204,11 +204,11 @@ Producing final responses
 Persisting conversation context
 Planner
 
-The Planner uses the configured LLM to determine the next action.
+The LLM decision engine determines the next action using the available registered tools and prior execution context.
 
-It can identify when a tool is required and provide the arguments needed for execution.
+It can identify when a tool is required, provide the arguments needed for execution, and reconsider the request after tool results are available.
 
-The planner is responsible for decision-making, while tool execution remains outside the LLM itself.
+The decision layer is responsible for decision-making, while tool execution remains outside the LLM itself.
 
 Tool Registry
 
@@ -324,7 +324,7 @@ pytest -q
 
 Current verified result:
 
-11 tests passed
+14 tests passed
 
 The test suite provides automated verification of the implemented AgentForge components.
 
@@ -350,7 +350,7 @@ Compilation:  PASSED
 The current implementation has been verified through multiple layers.
 
 Automated Verification
-11 automated tests passing
+14 automated tests passing
 Ruff validation passing
 Python compilation passing
 Runtime Verification
@@ -487,7 +487,7 @@ The current MVP focuses on the foundational agent execution loop and supporting 
 
 Implemented capabilities include:
 
-LLM-based planning
+LLM-based decision-making
 Local LLM inference
 Tool discovery
 Tool selection
@@ -509,7 +509,7 @@ Potential future extensions include:
 Additional production-grade tools
 Structured tool schemas
 More advanced planning strategies
-More complex multi-step workflows
+More advanced multi-step workflows
 Agent observability
 Authentication and authorization
 Richer memory strategies
@@ -528,7 +528,7 @@ The current implementation has passed automated and live verification for its im
 
 Current evidence includes:
 
-11 automated tests passing
+14 automated tests passing
 Ruff validation passing
 Python compilation passing
 Live Ollama connectivity
@@ -537,7 +537,7 @@ End-to-end agent execution
 Tool selection and execution
 Persistent SQLite memory
 
-AgentForge is currently positioned as a local AI agent engineering project demonstrating the core architecture behind tool-using LLM applications.
+AgentForge is currently positioned as a local AI agent engineering project demonstrating bounded iterative tool use, controlled execution, persistent memory, and the core architecture behind tool-using LLM applications.
 
 🎯 What This Project Demonstrates
 
@@ -565,7 +565,7 @@ Testing
    ↓
 Code Quality
 
-The project goes beyond a simple LLM API wrapper by implementing the control loop required for a functional tool-using AI agent.
+The project goes beyond a simple LLM API wrapper by implementing a bounded iterative control loop for a functional tool-using AI agent.
 
 It demonstrates how planning, deterministic execution, memory, runtime controls, and API integration can be combined into a maintainable local agent architecture.
 

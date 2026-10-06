@@ -75,6 +75,7 @@ class OllamaClient:
         self,
         user_request: str,
         tools: list[dict[str, Any]],
+        context: str | None = None,
     ) -> dict[str, Any]:
         tool_text = json.dumps(tools, indent=2)
 
@@ -123,6 +124,8 @@ class OllamaClient:
             ],
         }
 
+        context_text = context or "No previous tool execution results."
+
         prompt = f"""
 You are the decision engine of an AI agent.
 
@@ -132,7 +135,11 @@ User request:
 Available tools:
 {tool_text}
 
-Select a tool only if one of the available tools can directly satisfy the request.
+Previous execution context:
+{context_text}
+
+Select a tool only if one of the available tools can directly satisfy the request
+that remains. If the request is already satisfied by the execution context, select final.
 Otherwise select final.
 
 Return ONLY the required JSON object.

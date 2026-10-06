@@ -1,13 +1,11 @@
-import logging
 from dataclasses import dataclass
 from typing import Any
 
 from app.agent.planner import Executor, Planner
+from app.core.config import settings
 from app.llm.client import OllamaClient
 from app.memory.store import MemoryStore
 from app.tools.registry import ToolRegistry
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -28,7 +26,10 @@ class Agent:
         self.tools = tools or ToolRegistry()
         self.memory = memory or MemoryStore("data/agentforge.db")
         self.planner = Planner()
-        self.executor = Executor(self.tools)
+        self.executor = Executor(
+            self.tools,
+            max_tool_calls=settings.agent_max_tool_calls,
+        )
 
     def _system_prompt(self) -> str:
         return """
@@ -50,14 +51,40 @@ If the user's request does not require a tool, answer normally.
         tool_calls: list[dict[str, Any]] = []
         tool_calls_used = 0
         steps = 0
+        context = ""
 
-        decision = self.llm.decide_tool(
-            user_request,
-            self.tools.list_tools(),
-        )
-        steps += 1
+        while steps < settings.agent_max_steps:
+            decision = self.llm.decide_tool(
+                user_request,
+                self.tools.list_tools(),
+                context=context or None,
+            )
+            steps += 1
 
-        if decision.get("action") == "tool":
+            if decision.get("action") == "final":
+                final_context = context or "No tool execution was required."
+
+                prompt = f"""
+Original user request:
+{user_request}
+
+Plan:
+{plan.steps}
+
+Execution context:
+{final_context}
+
+Answer the user directly and concisely.
+Use verified execution results when available.
+Do not mention internal planning unless useful.
+""".strip()
+
+                answer = self.llm.generate(
+                    prompt,
+                    system=self._system_prompt(),
+                )
+                break
+
             tool_name = decision.get("tool_name")
             arguments = decision.get("arguments") or {}
 
@@ -78,35 +105,15 @@ If the user's request does not require a tool, answer normally.
                 }
             )
 
-            prompt = f"""
-Original user request:
-{user_request}
-
-Plan:
-{plan.steps}
-
-Executed tool:
-{tool_name}
-
-Tool arguments:
-{arguments}
-
-Tool result:
-{result}
-
-Answer the user using the verified tool result.
-Do not mention internal planning unless useful.
-""".strip()
-
-            answer = self.llm.generate(
-                prompt,
-                system=self._system_prompt(),
-            )
+            context = (
+                f"{context}\n\n"
+                f"Tool execution {tool_calls_used}:\n"
+                f"Tool: {tool_name}\n"
+                f"Arguments: {arguments}\n"
+                f"Result: {result}"
+            ).strip()
         else:
-            answer = self.llm.generate(
-                user_request,
-                system=self._system_prompt(),
-            )
+            raise RuntimeError("Maximum agent-step limit reached.")
 
         self.memory.add("assistant", answer)
 
