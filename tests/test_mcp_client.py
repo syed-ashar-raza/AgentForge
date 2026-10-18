@@ -48,3 +48,13 @@ def test_mcp_client_executes_remote_datetime(mcp_client):
 
     assert isinstance(result, str)
     assert result.endswith("+00:00")
+
+
+def test_mcp_client_propagates_remote_tool_errors(mcp_client):
+    registry, _ = mcp_client
+
+    with pytest.raises(RuntimeError, match="Invalid arithmetic expression"):
+        registry.execute(
+            "mcp__agentforge__calculator",
+            {"expression": "1 / 0"},
+        )
