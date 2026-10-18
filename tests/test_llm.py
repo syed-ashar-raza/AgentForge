@@ -149,3 +149,21 @@ def test_generate_passes_generation_controls() -> None:
     assert payload["format"] == {"type": "object"}
     assert payload["think"] is False
     assert post.call_args.kwargs["timeout"] == 30.0
+
+
+def test_generate_handles_invalid_api_json() -> None:
+    client = OllamaClient()
+    mock_response = Mock()
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.side_effect = ValueError("Invalid JSON")
+
+    with patch(
+        "app.llm.client.httpx.post",
+        return_value=mock_response,
+    ):
+        try:
+            client.generate("hello")
+        except RuntimeError as exc:
+            assert "invalid json" in str(exc).lower()
+        else:
+            raise AssertionError("Expected RuntimeError for invalid API JSON.")

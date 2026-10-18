@@ -57,7 +57,12 @@ class OllamaClient:
             logger.exception("Ollama request failed.")
             raise RuntimeError(f"Ollama request failed: {exc}") from exc
 
-        data = response.json()
+        try:
+            data = response.json()
+        except ValueError as exc:
+            logger.warning("Ollama returned invalid JSON.")
+            raise RuntimeError("Ollama returned invalid JSON.") from exc
+
         return str(data.get("response", "")).strip()
 
     def health(self) -> bool:
