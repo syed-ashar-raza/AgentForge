@@ -152,9 +152,47 @@ Available tools:
 Previous execution context:
 {context_text}
 
-Select a tool only if one of the available tools can directly satisfy the request
-that remains. If the request is already satisfied by the execution context, select final.
-Otherwise select final.
+Follow these rules exactly:
+
+1. Choose action "tool" when an available tool can directly perform
+   the user's requested operation.
+2. When action is "tool":
+   - tool_name MUST be the name of the selected available tool.
+   - arguments MUST contain the arguments required by that tool.
+   - reason MUST be "tool_required".
+3. Choose action "final" when no available tool is needed or suitable,
+   or when the request has already been satisfied by previous execution.
+4. When action is "final":
+   - tool_name MUST be null.
+   - arguments MUST be an empty object.
+   - reason MUST be "no_tool_available".
+5. Never combine action "final" with a tool name.
+6. Never select a tool that is not listed in Available tools.
+7. Do not invent tool capabilities or arguments.
+8. The calculator supports arithmetic operations only. Do not assume
+   that it supports exponentiation or other unsupported operations.
+
+Examples:
+
+Request: Calculate 17 * 23.
+Decision:
+{{
+    "action": "tool",
+    "tool_name": "calculator",
+    "arguments": {{"expression": "17 * 23"}},
+    "reason": "tool_required"
+}}
+Request: What is the current UTC date and time?
+Decision:
+{{"action":"tool","tool_name":"current_datetime","arguments":{{}},"reason":"tool_required"}}
+
+Request: Hello! How are you?
+Decision:
+{{"action":"final","tool_name":null,"arguments":{{}},"reason":"no_tool_available"}}
+
+Request: Calculate 2 to the power of 8.
+Decision:
+{{"action":"final","tool_name":null,"arguments":{{}},"reason":"no_tool_available"}}
 
 Return ONLY the required JSON object.
 Do not explain your reasoning.
@@ -165,7 +203,7 @@ Do not explain your reasoning.
             think=False,
             response_format=schema,
             options={
-                "num_predict": 64,
+                "num_predict": 128,
             },
             timeout=30.0,
         )
@@ -197,9 +235,12 @@ Do not explain your reasoning.
                 raise ValueError("Invalid decision reason.")
 
             if action == "final":
-                tool_name = None
-                if reason == "tool_required":
-                    raise ValueError("Final action cannot require a tool.")
+                if tool_name is not None:
+                    raise ValueError("Final action cannot select a tool.")
+                if arguments:
+                    raise ValueError("Final action cannot include tool arguments.")
+                if reason != "no_tool_available":
+                    raise ValueError("Final action requires no_tool_available.")
 
             if action == "tool":
                 if tool_name is None:

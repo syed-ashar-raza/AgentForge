@@ -1,0 +1,7 @@
+{
+  "model": "qwen3:4b",
+  "total_cases": 12,
+  "decision_accuracy": 1.0,
+  "tool_selection_accuracy": 1.0,
+  "failures": []
+}\n

@@ -1,0 +1,12 @@
+﻿{"request":"Calculate 17 * 23.","expected_action":"tool","expected_tool":"calculator"}
+{"request":"What is 144 divided by 12?","expected_action":"tool","expected_tool":"calculator"}
+{"request":"Evaluate (25 + 15) * 3.","expected_action":"tool","expected_tool":"calculator"}
+{"request":"Calculate 2 to the power of 8.","expected_action":"final","expected_tool":null}
+{"request":"What is the current UTC date and time?","expected_action":"tool","expected_tool":"current_datetime"}
+{"request":"Tell me the current UTC time.","expected_action":"tool","expected_tool":"current_datetime"}
+{"request":"What date and time is it in UTC right now?","expected_action":"tool","expected_tool":"current_datetime"}
+{"request":"Hello! How are you?","expected_action":"final","expected_tool":null}
+{"request":"Explain what a Python list is.","expected_action":"final","expected_tool":null}
+{"request":"Write a short haiku about rain.","expected_action":"final","expected_tool":null}
+{"request":"What is photosynthesis?","expected_action":"final","expected_tool":null}
+{"request":"Explain the difference between machine learning and deep learning.","expected_action":"final","expected_tool":null}
