@@ -218,3 +218,24 @@ def test_generate_rejects_invalid_response_fields(api_data: object) -> None:
     ):
         with pytest.raises(RuntimeError):
             client.generate("hello")
+
+
+def test_decide_tool_rejects_inconsistent_final_decision() -> None:
+    client = OllamaClient()
+
+    with patch.object(
+        client,
+        "generate",
+        return_value=(
+            '{"action":"final","tool_name":null,'
+            '"arguments":{},"reason":"tool_required"}'
+        ),
+    ):
+        result = client.decide_tool("Calculate 2 + 3", TOOLS)
+
+    assert result == {
+        "action": "final",
+        "tool_name": None,
+        "arguments": {},
+        "reason": "no_tool_available",
+    }

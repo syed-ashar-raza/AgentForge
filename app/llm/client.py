@@ -198,6 +198,8 @@ Do not explain your reasoning.
 
             if action == "final":
                 tool_name = None
+                if reason == "tool_required":
+                    raise ValueError("Final action cannot require a tool.")
 
             if action == "tool" and tool_name is None:
                 raise ValueError("Tool action requires a tool name.")
