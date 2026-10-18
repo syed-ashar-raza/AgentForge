@@ -1,5 +1,7 @@
 from unittest.mock import Mock, patch
 
+import pytest
+
 from app.llm.client import OllamaClient
 
 TOOLS = [
@@ -187,3 +189,32 @@ def test_generate_rejects_invalid_response_structure() -> None:
             raise AssertionError(
                 "Expected RuntimeError for invalid API response structure."
             )
+
+
+@pytest.mark.parametrize(
+    "api_data",
+    [
+        None,
+        {},
+        {"response": None},
+        {"response": 123},
+    ],
+    ids=[
+        "null-json",
+        "missing-response",
+        "null-response",
+        "numeric-response",
+    ],
+)
+def test_generate_rejects_invalid_response_fields(api_data: object) -> None:
+    client = OllamaClient()
+    mock_response = Mock()
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.return_value = api_data
+
+    with patch(
+        "app.llm.client.httpx.post",
+        return_value=mock_response,
+    ):
+        with pytest.raises(RuntimeError):
+            client.generate("hello")
