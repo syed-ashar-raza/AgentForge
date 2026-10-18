@@ -592,3 +592,22 @@ No open-source license has been applied yet.
 ⭐ Project
 
 If you find AgentForge useful or interesting, consider giving the repository a ⭐ on GitHub.
+
+## MCP Server
+
+AgentForge exposes its built-in tools through the Model Context Protocol (MCP).
+
+### Available Tools
+
+- `calculator` - Safely evaluates mathematical expressions.
+- `current_datetime` - Returns the current UTC date and time in ISO 8601 format.
+
+### Run the MCP Server
+
+From the project root, run:
+
+```powershell
+.\.venv\Scripts\python.exe -m app.mcp_server
+```
+
+The server uses stdio transport. Configure your MCP-compatible client to launch this command from the AgentForge project directory. Standard output is reserved for MCP protocol communication.
