@@ -239,3 +239,25 @@ def test_decide_tool_rejects_inconsistent_final_decision() -> None:
         "arguments": {},
         "reason": "no_tool_available",
     }
+
+
+def test_decide_tool_rejects_inconsistent_tool_decision() -> None:
+    client = OllamaClient()
+
+    with patch.object(
+        client,
+        "generate",
+        return_value=(
+            '{"action":"tool","tool_name":"calculator",'
+            '"arguments":{"expression":"2+3"},'
+            '"reason":"no_tool_available"}'
+        ),
+    ):
+        result = client.decide_tool("Calculate 2 + 3", TOOLS)
+
+    assert result == {
+        "action": "final",
+        "tool_name": None,
+        "arguments": {},
+        "reason": "no_tool_available",
+    }
