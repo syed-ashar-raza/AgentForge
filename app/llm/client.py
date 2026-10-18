@@ -63,7 +63,16 @@ class OllamaClient:
             logger.warning("Ollama returned invalid JSON.")
             raise RuntimeError("Ollama returned invalid JSON.") from exc
 
-        return str(data.get("response", "")).strip()
+        if not isinstance(data, dict):
+            logger.warning("Ollama returned an invalid response structure.")
+            raise RuntimeError("Ollama returned an invalid response structure.")
+
+        result = data.get("response")
+        if not isinstance(result, str):
+            logger.warning("Ollama response is missing a valid response field.")
+            raise RuntimeError("Ollama response is missing a valid response field.")
+
+        return result.strip()
 
     def health(self) -> bool:
         try:

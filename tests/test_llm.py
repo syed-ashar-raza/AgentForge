@@ -167,3 +167,23 @@ def test_generate_handles_invalid_api_json() -> None:
             assert "invalid json" in str(exc).lower()
         else:
             raise AssertionError("Expected RuntimeError for invalid API JSON.")
+
+
+def test_generate_rejects_invalid_response_structure() -> None:
+    client = OllamaClient()
+    mock_response = Mock()
+    mock_response.raise_for_status.return_value = None
+    mock_response.json.return_value = ["unexpected", "list"]
+
+    with patch(
+        "app.llm.client.httpx.post",
+        return_value=mock_response,
+    ):
+        try:
+            client.generate("hello")
+        except RuntimeError as exc:
+            assert "invalid response" in str(exc).lower()
+        else:
+            raise AssertionError(
+                "Expected RuntimeError for invalid API response structure."
+            )
