@@ -50,3 +50,38 @@ def test_empty_dataset_is_rejected():
 def test_mismatched_case_and_decision_counts_are_rejected():
     with pytest.raises(ValueError, match="equal lengths"):
         score_decisions([make_case()], [])
+
+
+def test_category_metrics_separate_tool_types():
+    cases = [
+        make_case(tool="calculator"),
+        make_case(tool="current_datetime"),
+        make_case(action="final", tool=None),
+    ]
+    decisions = [
+        make_decision(),
+        make_decision(action="tool", tool="calculator"),
+        make_decision(action="final", tool=None),
+    ]
+
+    result = score_decisions(cases, decisions)
+    categories = result["category_metrics"]
+
+    assert categories["calculator"]["decision_accuracy"] == 1.0
+    assert categories["current_datetime"]["decision_accuracy"] == 1.0
+    assert categories["current_datetime"]["tool_selection_accuracy"] == 0.0
+    assert categories["no_tool"]["decision_accuracy"] == 1.0
+    assert categories["no_tool"]["total_cases"] == 1
+
+
+def test_category_metrics_handle_multiple_cases():
+    cases = [make_case(), make_case()]
+    decisions = [
+        make_decision(),
+        make_decision(action="final", tool=None),
+    ]
+
+    result = score_decisions(cases, decisions)
+
+    assert result["category_metrics"]["calculator"]["total_cases"] == 2
+    assert result["category_metrics"]["calculator"]["decision_accuracy"] == 0.5
