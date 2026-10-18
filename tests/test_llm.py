@@ -1,4 +1,4 @@
-﻿from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch
 
 from app.llm.client import OllamaClient
 
@@ -23,8 +23,7 @@ def test_decide_tool_final() -> None:
         client,
         "generate",
         return_value=(
-            '{"action":"final","tool_name":null,"arguments":{}'
-            ',"reason":"no_tool_available"}'
+            '{"action":"final","tool_name":null,"arguments":{},"reason":"no_tool_available"}'
         ),
     ):
         result = client.decide_tool(
@@ -92,8 +91,7 @@ def test_decide_tool_rejects_unknown_tool() -> None:
         client,
         "generate",
         return_value=(
-            '{"action":"tool","tool_name":"fake_tool",'
-            '"arguments":{},"reason":"tool_required"}'
+            '{"action":"tool","tool_name":"fake_tool","arguments":{},"reason":"tool_required"}'
         ),
     ):
         result = client.decide_tool(

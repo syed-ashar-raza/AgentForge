@@ -1,11 +1,11 @@
-﻿from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 
 from app.tools.registry import ToolRegistry
 
 mcp = FastMCP(
     "AgentForge",
     instructions=(
-        "AgentForge local tools. Use calculator for arithmetic " 
+        "AgentForge local tools. Use calculator for arithmetic "
         "and current_datetime for the current UTC time."
     ),
 )
@@ -27,4 +27,3 @@ def current_datetime() -> str:
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
-

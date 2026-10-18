@@ -5,7 +5,7 @@ agent = Agent()
 tests = [
     "Calculate 25 * 17 + 3.",
     "What is the current UTC date and time?",
-    "Say hello and explain that you are AgentForge."
+    "Say hello and explain that you are AgentForge.",
 ]
 
 for i, goal in enumerate(tests, 1):

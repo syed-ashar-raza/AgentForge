@@ -1,4 +1,4 @@
-﻿import json
+import json
 import logging
 from typing import Any
 
@@ -206,4 +206,3 @@ Do not explain your reasoning.
                 "arguments": {},
                 "reason": "no_tool_available",
             }
-

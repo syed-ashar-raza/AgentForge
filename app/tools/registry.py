@@ -5,9 +5,7 @@ from app.tools.builtin import Tool, get_builtin_tools
 
 class ToolRegistry:
     def __init__(self) -> None:
-        self._tools: dict[str, Tool] = {
-            tool.name: tool for tool in get_builtin_tools()
-        }
+        self._tools: dict[str, Tool] = {tool.name: tool for tool in get_builtin_tools()}
 
     def register(self, tool: Tool) -> None:
         if tool.name in self._tools:
