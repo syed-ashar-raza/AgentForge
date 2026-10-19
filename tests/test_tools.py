@@ -18,3 +18,18 @@ def test_calculator_rejects_non_finite_results() -> None:
 
     with pytest.raises(ValueError):
         calculator("1e308 * 1e308")
+
+
+def test_tool_rejects_non_dictionary_arguments() -> None:
+    import pytest
+
+    from app.tools.builtin import Tool
+
+    tool = Tool(
+        name="safe_test",
+        description="Test argument validation",
+        function=lambda **kwargs: kwargs,
+    )
+
+    with pytest.raises(ValueError, match="arguments must be a dictionary"):
+        tool.execute(["unexpected"])

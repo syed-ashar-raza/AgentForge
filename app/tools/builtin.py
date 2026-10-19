@@ -64,6 +64,8 @@ class Tool:
         self.dangerous = dangerous
 
     def execute(self, arguments):
+        if not isinstance(arguments, dict):
+            raise ValueError("Tool arguments must be a dictionary.")
         return self.function(**arguments)
 
 
