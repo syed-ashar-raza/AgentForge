@@ -1,6 +1,6 @@
-﻿import pytest
+import pytest
 
-from app.evaluation.run import score_decisions
+from app.evaluation.run import evaluate_decisions, score_decisions
 
 
 def make_case(action="tool", tool="calculator"):
@@ -85,3 +85,41 @@ def test_category_metrics_handle_multiple_cases():
 
     assert result["category_metrics"]["calculator"]["total_cases"] == 2
     assert result["category_metrics"]["calculator"]["decision_accuracy"] == 0.5
+
+
+
+def test_evaluate_decisions_records_inference_failures():
+    class MockClient:
+        def decide_tool(self, request, tools):
+            if request == "fail":
+                raise RuntimeError("Ollama unavailable")
+            return {"action": "tool", "tool_name": "calculator"}
+
+    cases = [
+        {"request": "Calculate 2 + 3"},
+        {"request": "fail"},
+    ]
+
+    decisions, inference_failures = evaluate_decisions(
+        cases, MockClient(), []
+    )
+
+    assert len(decisions) == 2
+    assert decisions[0]["action"] == "tool"
+    assert decisions[1]["action"] == "error"
+    assert len(inference_failures) == 1
+    assert inference_failures[0]["case"] == 2
+    assert "Ollama unavailable" in inference_failures[0]["error"]
+
+
+def test_evaluate_decisions_returns_no_failures_on_success():
+    class MockClient:
+        def decide_tool(self, request, tools):
+            return {"action": "final", "tool_name": None}
+
+    decisions, inference_failures = evaluate_decisions(
+        [{"request": "Hello"}], MockClient(), []
+    )
+
+    assert decisions == [{"action": "final", "tool_name": None}]
+    assert inference_failures == []

@@ -1,9 +1,33 @@
-﻿import json
+import json
 from pathlib import Path
 
 from app.llm.client import OllamaClient
 from app.tools.registry import ToolRegistry
 
+
+def evaluate_decisions(
+    cases: list[dict[str, object]],
+    client: OllamaClient,
+    tools: list[dict[str, object]],
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+    decisions: list[dict[str, object]] = []
+    inference_failures: list[dict[str, object]] = []
+
+    for index, case in enumerate(cases, start=1):
+        try:
+            decision = client.decide_tool(str(case["request"]), tools)
+            decisions.append(decision)
+        except Exception as exc:
+            decisions.append({"action": "error", "tool_name": None})
+            inference_failures.append(
+                {
+                    "case": index,
+                    "request": case["request"],
+                    "error": f"{type(exc).__name__}: {exc}",
+                }
+            )
+
+    return decisions, inference_failures
 
 def score_decisions(
     cases: list[dict[str, object]],
@@ -86,13 +110,12 @@ def main() -> None:
 
     client = OllamaClient()
     tools = ToolRegistry().list_tools()
-    decisions = [
-        client.decide_tool(case["request"], tools)
-        for case in cases
-    ]
+    decisions, inference_failures = evaluate_decisions(cases, client, tools)
 
     report = {
         "model": client.model,
+        "status": "incomplete" if inference_failures else "complete",
+        "inference_failures": inference_failures,
         **score_decisions(cases, decisions),
     }
 
