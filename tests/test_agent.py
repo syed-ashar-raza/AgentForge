@@ -131,3 +131,9 @@ def test_executor_rejects_negative_tool_call_count() -> None:
 
     with pytest.raises(ValueError, match="tool_calls_used"):
         executor.execute_tool("safe_test", {}, -1)
+
+def test_executor_rejects_non_dictionary_arguments() -> None:
+    executor = Executor(ToolRegistry())
+
+    with pytest.raises(ValueError, match="arguments must be a dictionary"):
+        executor.execute_tool("calculator", ["1 + 1"], 0)

@@ -32,6 +32,9 @@ class Executor:
         arguments: dict[str, Any],
         tool_calls_used: int,
     ) -> tuple[Any, int]:
+        if not isinstance(arguments, dict):
+            raise ValueError("Tool arguments must be a dictionary.")
+
         if tool_calls_used < 0:
             raise ValueError("tool_calls_used cannot be negative.")
 
