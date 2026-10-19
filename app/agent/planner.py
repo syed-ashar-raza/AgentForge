@@ -35,5 +35,9 @@ class Executor:
         if tool_calls_used >= self.max_tool_calls:
             raise RuntimeError("Maximum tool-call limit reached.")
 
-        result = self.tools.execute(name, arguments)
+        tool = self.tools.get(name)
+        if tool.dangerous:
+            raise PermissionError("Dangerous tools are disabled by default.")
+
+        result = tool.execute(arguments)
         return result, tool_calls_used + 1

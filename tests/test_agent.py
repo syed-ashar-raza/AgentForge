@@ -3,6 +3,9 @@ from unittest.mock import Mock
 import pytest
 
 from app.agent.agent import Agent
+from app.agent.planner import Executor
+from app.tools.builtin import Tool
+from app.tools.registry import ToolRegistry
 
 
 def test_agent_iterates_after_tool_execution() -> None:
@@ -93,3 +96,17 @@ def test_agent_enforces_max_tool_calls(monkeypatch: pytest.MonkeyPatch) -> None:
         agent.run("Perform multiple calculations.")
 
     assert llm.decide_tool.call_count == 2
+
+def test_executor_blocks_dangerous_tools_by_default() -> None:
+    registry = ToolRegistry()
+    dangerous_tool = Tool(
+        name="dangerous_test",
+        description="Test-only dangerous tool",
+        function=lambda: "executed",
+        dangerous=True,
+    )
+    registry.register(dangerous_tool)
+    executor = Executor(registry)
+
+    with pytest.raises(PermissionError, match="Dangerous tools are disabled"):
+        executor.execute_tool("dangerous_test", {}, 0)
