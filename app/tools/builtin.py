@@ -1,4 +1,5 @@
 import ast
+import math
 import operator as op
 from datetime import UTC
 
@@ -23,6 +24,9 @@ def calculator(expression: str) -> str:
     except (SyntaxError, ValueError, TypeError, ZeroDivisionError) as exc:
         raise ValueError("Invalid arithmetic expression.") from exc
 
+    if isinstance(result, float) and not math.isfinite(result):
+        raise ValueError("Non-finite results are not allowed.")
+
     return str(result)
 
 
@@ -30,6 +34,8 @@ def _evaluate(node: ast.AST) -> int | float:
     if isinstance(node, ast.Constant) and isinstance(node.value, (int, float)):
         if isinstance(node.value, bool):
             raise ValueError("Boolean values are not allowed.")
+        if isinstance(node.value, float) and not math.isfinite(node.value):
+            raise ValueError("Non-finite numbers are not allowed.")
         return node.value
 
     if isinstance(node, ast.UnaryOp) and type(node.op) in _OPERATORS:

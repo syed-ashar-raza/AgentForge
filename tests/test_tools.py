@@ -11,3 +11,10 @@ def test_calculator_rejects_code() -> None:
     except ValueError:
         return
     raise AssertionError("Unsafe calculator input was accepted")
+
+
+def test_calculator_rejects_non_finite_results() -> None:
+    import pytest
+
+    with pytest.raises(ValueError):
+        calculator("1e308 * 1e308")
