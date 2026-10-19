@@ -110,3 +110,10 @@ def test_executor_blocks_dangerous_tools_by_default() -> None:
 
     with pytest.raises(PermissionError, match="Dangerous tools are disabled"):
         executor.execute_tool("dangerous_test", {}, 0)
+
+
+def test_system_prompt_treats_tool_results_as_untrusted() -> None:
+    prompt = Agent()._system_prompt()
+
+    assert "untrusted data" in prompt.lower()
+    assert "instructions" in prompt.lower()
