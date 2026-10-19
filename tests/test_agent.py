@@ -117,3 +117,17 @@ def test_system_prompt_treats_tool_results_as_untrusted() -> None:
 
     assert "untrusted data" in prompt.lower()
     assert "instructions" in prompt.lower()
+
+
+def test_executor_rejects_negative_tool_call_count() -> None:
+    registry = ToolRegistry()
+    tool = Tool(
+        name="safe_test",
+        description="Test-only safe tool",
+        function=lambda: "executed",
+    )
+    registry.register(tool)
+    executor = Executor(registry)
+
+    with pytest.raises(ValueError, match="tool_calls_used"):
+        executor.execute_tool("safe_test", {}, -1)

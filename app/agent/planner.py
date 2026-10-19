@@ -32,6 +32,9 @@ class Executor:
         arguments: dict[str, Any],
         tool_calls_used: int,
     ) -> tuple[Any, int]:
+        if tool_calls_used < 0:
+            raise ValueError("tool_calls_used cannot be negative.")
+
         if tool_calls_used >= self.max_tool_calls:
             raise RuntimeError("Maximum tool-call limit reached.")
 
