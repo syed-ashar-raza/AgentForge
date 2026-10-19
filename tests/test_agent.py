@@ -137,3 +137,31 @@ def test_executor_rejects_non_dictionary_arguments() -> None:
 
     with pytest.raises(ValueError, match="arguments must be a dictionary"):
         executor.execute_tool("calculator", ["1 + 1"], 0)
+
+
+def test_agent_rejects_non_dictionary_decision() -> None:
+    llm = Mock()
+    llm.decide_tool.return_value = ["tool", "calculator"]
+
+    agent = Agent(llm=llm)
+
+    with pytest.raises(ValueError, match="Decision must be a dictionary"):
+        agent.run("Calculate 2 + 3.")
+
+
+
+def test_agent_rejects_invalid_decision_action() -> None:
+    llm = Mock()
+    llm.decide_tool.return_value = {
+        "action": "execute_anything",
+        "tool_name": "calculator",
+        "arguments": {"expression": "2 + 3"},
+        "reason": "tool_required",
+    }
+
+    agent = Agent(llm=llm)
+
+    with pytest.raises(ValueError, match="Invalid decision action"):
+        agent.run("Calculate 2 + 3.")
+
+    assert llm.generate.call_count == 0

@@ -63,7 +63,14 @@ If the user's request does not require a tool, answer normally.
             )
             steps += 1
 
-            if decision.get("action") == "final":
+            if not isinstance(decision, dict):
+                raise ValueError("Decision must be a dictionary.")
+
+            action = decision.get("action")
+            if action not in {"tool", "final"}:
+                raise ValueError("Invalid decision action.")
+
+            if action == "final":
                 final_context = context or "No tool execution was required."
 
                 prompt = f"""
