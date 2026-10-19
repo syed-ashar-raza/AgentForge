@@ -1,3 +1,4 @@
+import json
 from unittest.mock import Mock, patch
 
 import pytest
@@ -254,6 +255,40 @@ def test_decide_tool_rejects_inconsistent_tool_decision() -> None:
         ),
     ):
         result = client.decide_tool("Calculate 2 + 3", TOOLS)
+
+    assert result == {
+        "action": "final",
+        "tool_name": None,
+        "arguments": {},
+        "reason": "no_tool_available",
+    }
+
+
+@pytest.mark.parametrize(
+    "tool_name,arguments",
+    [
+        ("calculator", {}),
+        ("calculator", {"expression": "2 + 3", "unexpected": True}),
+        ("calculator", {"expression": 123}),
+        ("current_datetime", {"unexpected": True}),
+    ],
+)
+def test_decide_tool_rejects_invalid_tool_arguments(
+    tool_name: str,
+    arguments: dict[str, object],
+) -> None:
+    client = OllamaClient()
+    response = json.dumps(
+        {
+            "action": "tool",
+            "tool_name": tool_name,
+            "arguments": arguments,
+            "reason": "tool_required",
+        }
+    )
+
+    with patch.object(client, "generate", return_value=response):
+        result = client.decide_tool("Run the selected tool", TOOLS)
 
     assert result == {
         "action": "final",

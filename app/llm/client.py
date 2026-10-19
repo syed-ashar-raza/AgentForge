@@ -248,6 +248,23 @@ Do not explain your reasoning.
                 if reason != "tool_required":
                     raise ValueError("Tool action requires tool_required reason.")
 
+                if tool_name == "calculator":
+                    if set(arguments) != {"expression"}:
+                        raise ValueError(
+                            "Calculator requires only an expression."
+                        )
+                    expression = arguments["expression"]
+                    if (
+                        not isinstance(expression, str)
+                        or not expression.strip()
+                        or len(expression) > 200
+                    ):
+                        raise ValueError("Invalid calculator expression argument.")
+                elif tool_name == "current_datetime" and arguments:
+                    raise ValueError(
+                        "Current datetime does not accept arguments."
+                    )
+
             return {
                 "action": action,
                 "tool_name": tool_name,
