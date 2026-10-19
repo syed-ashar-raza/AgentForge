@@ -1,6 +1,7 @@
 import json
 from unittest.mock import Mock, patch
 
+import httpx
 import pytest
 
 from app.llm.client import OllamaClient
@@ -296,3 +297,35 @@ def test_decide_tool_rejects_invalid_tool_arguments(
         "arguments": {},
         "reason": "no_tool_available",
     }
+
+
+def test_generate_handles_http_error() -> None:
+    client = OllamaClient()
+
+    with patch(
+        "app.llm.client.httpx.post",
+        side_effect=httpx.ConnectError("Connection refused"),
+    ):
+        with pytest.raises(RuntimeError, match="Ollama request failed"):
+            client.generate("hello")
+
+
+def test_generate_handles_timeout() -> None:
+    client = OllamaClient()
+
+    with patch(
+        "app.llm.client.httpx.post",
+        side_effect=httpx.ReadTimeout("Request timed out"),
+    ):
+        with pytest.raises(RuntimeError, match="Ollama request failed"):
+            client.generate("hello", timeout=1.0)
+
+
+def test_health_returns_false_when_ollama_unavailable() -> None:
+    client = OllamaClient()
+
+    with patch(
+        "app.llm.client.httpx.get",
+        side_effect=httpx.ConnectError("Connection refused"),
+    ):
+        assert client.health() is False
