@@ -10,9 +10,12 @@ def test_root() -> None:
     assert response.json()["name"] == "AgentForge"
 
 
-def test_tools() -> None:
+def test_tools(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "api_auth_token", "test-token")
     client = TestClient(app)
-    response = client.get("/api/v1/tools")
+    response = client.get("/api/v1/tools", headers={"Authorization": "Bearer test-token"})
     assert response.status_code == 200
     names = {item["name"] for item in response.json()["tools"]}
     assert "calculator" in names
@@ -27,13 +30,14 @@ def test_mcp_lifespan_startup_and_shutdown(monkeypatch) -> None:
 
     test_agent = Agent()
     monkeypatch.setattr(settings, "mcp_enabled", True)
+    monkeypatch.setattr(settings, "api_auth_token", "test-token")
     monkeypatch.setattr(main, "agent", test_agent)
     monkeypatch.setattr(routes, "agent", test_agent)
 
     with TestClient(main.app) as client:
         assert main.app.state.mcp_client is not None
 
-        response = client.get("/api/v1/tools")
+        response = client.get("/api/v1/tools", headers={"Authorization": "Bearer test-token"})
         assert response.status_code == 200
 
         names = {item["name"] for item in response.json()["tools"]}
@@ -147,3 +151,61 @@ def test_request_observability_logs_unhandled_exception(caplog) -> None:
         and "request_id=" in record.message
         for record in caplog.records
     )
+
+
+def test_protected_route_rejects_missing_token(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "api_auth_token", "test-token")
+    response = TestClient(app).get("/api/v1/tools")
+
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
+
+
+def test_protected_route_rejects_invalid_token(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "api_auth_token", "test-token")
+    response = TestClient(app).get(
+        "/api/v1/tools",
+        headers={"Authorization": "Bearer wrong-token"},
+    )
+
+    assert response.status_code == 401
+
+
+def test_protected_route_accepts_valid_token(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "api_auth_token", "test-token")
+    response = TestClient(app).get(
+        "/api/v1/tools",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 200
+
+
+def test_protected_route_fails_closed_without_configured_token(monkeypatch) -> None:
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "api_auth_token", "")
+    response = TestClient(app).get(
+        "/api/v1/tools",
+        headers={"Authorization": "Bearer test-token"},
+    )
+
+    assert response.status_code == 503
+
+
+def test_health_remains_public_when_auth_is_configured(monkeypatch) -> None:
+    import app.api.routes as routes
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "api_auth_token", "test-token")
+    monkeypatch.setattr(routes.agent.llm, "health", lambda: True)
+
+    response = TestClient(app).get("/api/v1/health")
+
+    assert response.status_code == 200

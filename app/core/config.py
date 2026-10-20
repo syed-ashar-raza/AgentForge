@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3:4b"
     llm_provider: str = "ollama"
     gemini_api_key: str = ""
+    api_auth_token: str = ""
     gemini_model: str = "gemini-flash-lite-latest"
     agent_max_steps: int = 5
     agent_max_tool_calls: int = 5

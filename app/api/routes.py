@@ -1,6 +1,7 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
 from app.agent.agent import Agent
+from app.api.auth import require_api_token
 from app.api.schemas import HealthResponse, QueryRequest, QueryResponse
 from app.core.config import settings
 
@@ -20,23 +21,27 @@ def health() -> HealthResponse:
     )
 
 
-@router.get("/tools")
+@router.get("/tools", dependencies=[Depends(require_api_token)])
 def tools() -> dict:
     return {"tools": agent.tools.list_tools()}
 
 
-@router.get("/memory")
-def memory() -> dict:
+@router.get("/memory", dependencies=[Depends(require_api_token)])
+def get_memory() -> dict:
     return {"messages": agent.memory.recent()}
 
 
-@router.delete("/memory")
+@router.delete("/memory", dependencies=[Depends(require_api_token)])
 def clear_memory() -> dict:
     agent.memory.clear()
     return {"status": "cleared"}
 
 
-@router.post("/query", response_model=QueryResponse)
+@router.post(
+    "/query",
+    response_model=QueryResponse,
+    dependencies=[Depends(require_api_token)],
+)
 def query(request: QueryRequest) -> QueryResponse:
     try:
         result = agent.run(request.message)
