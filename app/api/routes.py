@@ -10,11 +10,13 @@ agent = Agent()
 
 @router.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    ollama_ok = agent.llm.health()
+    provider = settings.llm_provider.lower()
+    llm_ok = agent.llm.health()
     return HealthResponse(
-        status="ok" if ollama_ok else "degraded",
-        ollama=ollama_ok,
-        model=settings.ollama_model,
+        status="ok" if llm_ok else "degraded",
+        ollama=llm_ok if provider == "ollama" else False,
+        provider=provider,
+        model=agent.llm.model,
     )
 
 

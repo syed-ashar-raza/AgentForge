@@ -97,6 +97,7 @@ def test_agent_enforces_max_tool_calls(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert llm.decide_tool.call_count == 2
 
+
 def test_executor_blocks_dangerous_tools_by_default() -> None:
     registry = ToolRegistry()
     dangerous_tool = Tool(
@@ -132,6 +133,7 @@ def test_executor_rejects_negative_tool_call_count() -> None:
     with pytest.raises(ValueError, match="tool_calls_used"):
         executor.execute_tool("safe_test", {}, -1)
 
+
 def test_executor_rejects_non_dictionary_arguments() -> None:
     executor = Executor(ToolRegistry())
 
@@ -149,7 +151,6 @@ def test_agent_rejects_non_dictionary_decision() -> None:
         agent.run("Calculate 2 + 3.")
 
 
-
 def test_agent_rejects_invalid_decision_action() -> None:
     llm = Mock()
     llm.decide_tool.return_value = {
@@ -165,3 +166,41 @@ def test_agent_rejects_invalid_decision_action() -> None:
         agent.run("Calculate 2 + 3.")
 
     assert llm.generate.call_count == 0
+
+
+@pytest.mark.parametrize(
+    ("provider", "selected_client"),
+    [
+        ("ollama", "OllamaClient"),
+        ("gemini", "GeminiClient"),
+    ],
+)
+def test_agent_selects_configured_llm_provider(
+    monkeypatch: pytest.MonkeyPatch,
+    provider: str,
+    selected_client: str,
+) -> None:
+    import app.agent.agent as agent_module
+
+    ollama = Mock(name="ollama_client")
+    gemini = Mock(name="gemini_client")
+    monkeypatch.setattr(agent_module.settings, "llm_provider", provider)
+    monkeypatch.setattr(agent_module, "OllamaClient", Mock(return_value=ollama))
+    monkeypatch.setattr(agent_module, "GeminiClient", Mock(return_value=gemini))
+
+    agent = Agent()
+
+    expected = ollama if selected_client == "OllamaClient" else gemini
+    assert agent.llm is expected
+
+
+def test_agent_rejects_unsupported_llm_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(
+        "app.agent.agent.settings.llm_provider",
+        "unsupported-provider",
+    )
+
+    with pytest.raises(ValueError, match="Unsupported LLM_PROVIDER"):
+        Agent()

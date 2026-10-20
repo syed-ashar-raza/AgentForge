@@ -188,9 +188,7 @@ def test_generate_rejects_invalid_response_structure() -> None:
         except RuntimeError as exc:
             assert "invalid response" in str(exc).lower()
         else:
-            raise AssertionError(
-                "Expected RuntimeError for invalid API response structure."
-            )
+            raise AssertionError("Expected RuntimeError for invalid API response structure.")
 
 
 @pytest.mark.parametrize(
@@ -229,8 +227,7 @@ def test_decide_tool_rejects_inconsistent_final_decision() -> None:
         client,
         "generate",
         return_value=(
-            '{"action":"final","tool_name":null,'
-            '"arguments":{},"reason":"tool_required"}'
+            '{"action":"final","tool_name":null,"arguments":{},"reason":"tool_required"}'
         ),
     ):
         result = client.decide_tool("Calculate 2 + 3", TOOLS)

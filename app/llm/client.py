@@ -93,11 +93,7 @@ class OllamaClient:
     ) -> dict[str, Any]:
         tool_text = json.dumps(tools, indent=2)
 
-        tool_names = [
-            str(tool["name"])
-            for tool in tools
-            if isinstance(tool.get("name"), str)
-        ]
+        tool_names = [str(tool["name"]) for tool in tools if isinstance(tool.get("name"), str)]
 
         tool_name_schema: dict[str, Any] = {
             "anyOf": [
@@ -250,9 +246,7 @@ Do not explain your reasoning.
 
                 if tool_name == "calculator":
                     if set(arguments) != {"expression"}:
-                        raise ValueError(
-                            "Calculator requires only an expression."
-                        )
+                        raise ValueError("Calculator requires only an expression.")
                     expression = arguments["expression"]
                     if (
                         not isinstance(expression, str)
@@ -261,9 +255,7 @@ Do not explain your reasoning.
                     ):
                         raise ValueError("Invalid calculator expression argument.")
                 elif tool_name == "current_datetime" and arguments:
-                    raise ValueError(
-                        "Current datetime does not accept arguments."
-                    )
+                    raise ValueError("Current datetime does not accept arguments.")
 
             return {
                 "action": action,
@@ -272,7 +264,7 @@ Do not explain your reasoning.
                 "reason": reason,
             }
 
-        except (json.JSONDecodeError, ValueError, TypeError):
+        except json.JSONDecodeError, ValueError, TypeError:
             logger.warning(
                 "Invalid tool decision from model: %s",
                 raw,

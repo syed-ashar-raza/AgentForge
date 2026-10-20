@@ -1,0 +1,30 @@
+services:
+  agentforge:
+    build: .
+    image: agentforge:local
+    ports:
+      - "127.0.0.1:8001:8000"
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen3:4b}
+      AGENT_MAX_STEPS: ${AGENT_MAX_STEPS:-5}
+      AGENT_MAX_TOOL_CALLS: ${AGENT_MAX_TOOL_CALLS:-5}
+      MEMORY_LIMIT: ${MEMORY_LIMIT:-20}
+      MCP_ENABLED: ${MCP_ENABLED:-false}
+      DATABASE_PATH: /app/data/agentforge.db
+    volumes:
+      - agentforge_data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=3)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  agentforge_data:

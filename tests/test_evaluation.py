@@ -87,7 +87,6 @@ def test_category_metrics_handle_multiple_cases():
     assert result["category_metrics"]["calculator"]["decision_accuracy"] == 0.5
 
 
-
 def test_evaluate_decisions_records_inference_failures():
     class MockClient:
         def decide_tool(self, request, tools):
@@ -100,9 +99,7 @@ def test_evaluate_decisions_records_inference_failures():
         {"request": "fail"},
     ]
 
-    decisions, inference_failures = evaluate_decisions(
-        cases, MockClient(), []
-    )
+    decisions, inference_failures = evaluate_decisions(cases, MockClient(), [])
 
     assert len(decisions) == 2
     assert decisions[0]["action"] == "tool"
@@ -117,9 +114,7 @@ def test_evaluate_decisions_returns_no_failures_on_success():
         def decide_tool(self, request, tools):
             return {"action": "final", "tool_name": None}
 
-    decisions, inference_failures = evaluate_decisions(
-        [{"request": "Hello"}], MockClient(), []
-    )
+    decisions, inference_failures = evaluate_decisions([{"request": "Hello"}], MockClient(), [])
 
     assert decisions == [{"action": "final", "tool_name": None}]
     assert inference_failures == []

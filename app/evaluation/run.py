@@ -29,6 +29,7 @@ def evaluate_decisions(
 
     return decisions, inference_failures
 
+
 def score_decisions(
     cases: list[dict[str, object]],
     decisions: list[dict[str, object]],
@@ -44,9 +45,7 @@ def score_decisions(
     failures: list[dict[str, object]] = []
     categories: dict[str, dict[str, int]] = {}
 
-    for index, (case, decision) in enumerate(
-        zip(cases, decisions, strict=True), start=1
-    ):
+    for index, (case, decision) in enumerate(zip(cases, decisions, strict=True), start=1):
         expected_action = case["expected_action"]
         expected_tool = case["expected_tool"]
         actual_action = decision["action"]
@@ -81,12 +80,8 @@ def score_decisions(
     category_metrics = {
         name: {
             "total_cases": metrics["total"],
-            "decision_accuracy": round(
-                metrics["correct_actions"] / metrics["total"], 4
-            ),
-            "tool_selection_accuracy": round(
-                metrics["correct_tools"] / metrics["total"], 4
-            ),
+            "decision_accuracy": round(metrics["correct_actions"] / metrics["total"], 4),
+            "tool_selection_accuracy": round(metrics["correct_tools"] / metrics["total"], 4),
         }
         for name, metrics in sorted(categories.items())
     }

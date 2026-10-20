@@ -6,6 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "qwen3:4b"
+    llm_provider: str = "ollama"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-flash-lite-latest"
     agent_max_steps: int = 5
     agent_max_tool_calls: int = 5
     mcp_enabled: bool = False

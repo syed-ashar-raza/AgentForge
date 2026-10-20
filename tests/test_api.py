@@ -41,3 +41,37 @@ def test_mcp_lifespan_startup_and_shutdown(monkeypatch) -> None:
         assert "mcp__agentforge__current_datetime" in names
 
     assert main.app.state.mcp_client is None
+
+
+def test_health_reports_ollama_provider(monkeypatch) -> None:
+    import app.api.routes as routes
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "llm_provider", "ollama")
+    monkeypatch.setattr(routes.agent.llm, "health", lambda: True)
+
+    response = TestClient(app).get("/api/v1/health")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["provider"] == "ollama"
+    assert data["ollama"] is True
+    assert data["model"] == routes.agent.llm.model
+
+
+def test_health_reports_gemini_provider(monkeypatch) -> None:
+    import app.api.routes as routes
+    from app.core.config import settings
+
+    monkeypatch.setattr(settings, "llm_provider", "gemini")
+    monkeypatch.setattr(routes.agent.llm, "health", lambda: True)
+
+    response = TestClient(app).get("/api/v1/health")
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ok"
+    assert data["provider"] == "gemini"
+    assert data["ollama"] is False
+    assert data["model"] == routes.agent.llm.model

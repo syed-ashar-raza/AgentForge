@@ -22,4 +22,5 @@ class QueryResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     ollama: bool
+    provider: str
     model: str

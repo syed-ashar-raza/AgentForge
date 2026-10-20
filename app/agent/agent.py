@@ -4,6 +4,7 @@ from typing import Any
 from app.agent.planner import Executor, Planner
 from app.core.config import settings
 from app.llm.client import OllamaClient
+from app.llm.gemini import GeminiClient
 from app.memory.store import MemoryStore
 from app.tools.registry import ToolRegistry
 
@@ -22,7 +23,14 @@ class Agent:
         tools: ToolRegistry | None = None,
         memory: MemoryStore | None = None,
     ) -> None:
-        self.llm = llm or OllamaClient()
+        if llm is not None:
+            self.llm = llm
+        elif settings.llm_provider.lower() == "ollama":
+            self.llm = OllamaClient()
+        elif settings.llm_provider.lower() == "gemini":
+            self.llm = GeminiClient()
+        else:
+            raise ValueError(f"Unsupported LLM_PROVIDER: {settings.llm_provider}")
         self.tools = tools or ToolRegistry()
         self.memory = memory or MemoryStore("data/agentforge.db")
         self.planner = Planner()
