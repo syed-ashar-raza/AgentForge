@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     ollama_model: str = "qwen3:4b"
     agent_max_steps: int = 5
     agent_max_tool_calls: int = 5
+    mcp_enabled: bool = False
     memory_limit: int = 20
     database_path: str = "data/agentforge.db"
 
